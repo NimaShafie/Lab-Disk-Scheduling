@@ -10,25 +10,72 @@ First-in-first-out (FIFO), Shortest-seek-time-first (SSTF), Scan, and C-Scan.
 
 */
 
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h> 
 #include <limits.h>
 
 // Declare global variables, including dynamic array to store sequence of traversed tracks
+int seq_size = 0;
+
+struct arrayType {
+	int value;
+} *array_prototype = NULL, **array_tracks = NULL;
+typedef struct arrayType type_array;
+
+// global variables and structs above ********************/
 
 
+// option 1
 /*********************************************************/
-void "OPTION #1"() {
+void EnterParameters() {
+	// local variables
+	int starting_track;
+
 	// prompt for the sequence size
+	printf("Enter size of sequence: ");
+	scanf("%d", &seq_size);
+	// ensure sequence size is a positive number
+	do {
+		if (seq_size < 0) {
+			printf("\nSequence size cannot be a negative number.\n");
+			printf("Enter size of sequence: ");
+			scanf("%d", &seq_size);
+		}
+	} while (seq_size < 0);
+
 	// allocate memory for the sequence of traversed tracks
+	array_tracks = (type_array**)malloc(seq_size * sizeof(array_tracks));
+	for (int i = 0; i < seq_size; i++) {
+		array_tracks[i] = (type_array*)malloc(seq_size * sizeof(array_tracks));
+	}
+
 	// prompt for starting track, store in index 0
+	printf("Enter starting track: ");
+	scanf("%d", &starting_track);
+	// ensure starting track is a positive number
+	do {
+		if (starting_track < 0) {
+			printf("\nSequence size cannot be a negative number.\n");
+			printf("Enter starting track: ");
+			scanf("%d", &starting_track);
+		}
+	} while (starting_track < 0);
+	array_tracks[0]->value = starting_track;
+
+	printf("\narray_tracks[0].value == %d\n", array_tracks[0]->value);
+	
 	// prompt for sequence of tracks to seek, store in index 1 to "sequence size-1"
+
+
 	return;
 } // "OPTION #1"
 
 
+// option 2
 /*********************************************************/
-void "OPTION #2"() {
+void Traverse_FIFO() {
 	// declare local variables		
 	// calculate total distance of traversed tracks
 	// print sequence of traversal
@@ -37,8 +84,9 @@ void "OPTION #2"() {
 } // "OPTION #2"	
 
 
+// option 3
 /*********************************************************/
-void "OPTION #3"() {
+void Traverse_SSTF() {
 	// declare local variables
 	// initialize current track and distance traversed to starting track
 	// begin printing sequence of traversal 
@@ -57,8 +105,9 @@ void "OPTION #3"() {
 } // "OPTION #3" 
 
 
+// option 4
 /*********************************************************/
-void "OPTION #4"() {
+void Traverse_Scan() {
 	// declare local variables
 	//prompt for initial direction (0=descreasing, 1=increasing)
 	// initialize current track and distance traversed to starting track
@@ -81,8 +130,9 @@ void "OPTION #4"() {
 } // "OPTION #4"
 
 
+// option 5
 /*********************************************************/
-void "OPTION #5"() {
+void Traverse_C_Scan() {
 	// declare local variables
 	// initialize current track and number traversed to starting track
 	// begin printing sequence of traversal 
@@ -111,20 +161,72 @@ void "OPTION #5"() {
 } // "OPTION #5
 
 
-/***************************************************************/
-void "OPTION #6"() {
+// option 6
+/*******************************************************************/
+void FreeMemoryQuitProgram() {
 	// if sequence is not NULL, free sequence
+
+	/*
+	if (head == NULL) return;
+	// else
+		// recursively call procedure on node->link
+		// deallocate memory from node
+	else {
+		FreeMemoryQuitProgram(head->link);
+		free(head);
+	}
+	*/
+
 	return;
-} // "OPTION #6
+}
 
 
 /***************************************************************/
 int main() {
 	/* declare local vars */
-	/* while user has not chosen to quit */
-		/* print menu of options */
-		/* prompt for menu selection */
-		/* call appropriate procedure based on choice--use switch statement or series of if, else if, else statements */
-} /* while loop */
+	int choice = 0;
+	enum { PARAM, FIFO, SSTF, SCAN, C_SCAN, QUIT, INVALID } menu_choice;
+
+	while (choice != 6) {
+		printf("Disk Scheduling\n------------------------------\n");
+		printf("1) Enter parameters\n");
+		printf("2) Calculate distance to traverse tracks using FIFO\n");
+		printf("3) Calculate distance to traverse tracks using SSTF\n");
+		printf("4) Calculate distance to traverse tracks using Scan\n");
+		printf("5) Calculate distance to traverse tracks using C-Scan\n");
+		printf("6) Quit program and free memory\n");
+		printf("\nEnter selection: ");
+		scanf("%d", &choice);
+		if (choice == 1) menu_choice = PARAM;
+		else if (choice == 2) menu_choice = FIFO;
+		else if (choice == 3) menu_choice = SSTF;
+		else if (choice == 4) menu_choice = SCAN;
+		else if (choice == 5) menu_choice = C_SCAN;
+		else if (choice == 6) menu_choice = QUIT;
+		else menu_choice = INVALID;
+
+		switch (menu_choice) {
+		case PARAM:
+			EnterParameters();
+			break;
+		case FIFO:
+			//AllocteBlockMemory();
+			break;
+		case SSTF:
+			//DeallocteBlockMemory();
+			break;
+		case SCAN:
+			//DefragmentMemory();
+			break;
+		case C_SCAN:
+			//DefragmentMemory();
+			break;
+		case QUIT:
+			FreeMemoryQuitProgram();
+			break;
+		case INVALID:
+			printf("Invalid selection made, try again.\n\n");
+		}
+	};
 return 1; /* indicates success */
 } // main	

@@ -31,6 +31,7 @@ typedef struct arrayType type_array;
 /*********************************************************/
 void EnterParameters() {
 	// local variables
+	int track;
 	int starting_track;
 
 	// prompt for the sequence size
@@ -64,11 +65,27 @@ void EnterParameters() {
 	} while (starting_track < 0);
 	array_tracks[0]->value = starting_track;
 
-	printf("\narray_tracks[0].value == %d\n", array_tracks[0]->value);
-	
 	// prompt for sequence of tracks to seek, store in index 1 to "sequence size-1"
+	printf("Enter sequence of tracks to seek: ");
+	for (int i = 1; i <= (seq_size - 1); i++) {
+		do {
+			scanf("%d", &track);
+			if (track < 0) {
+				printf("\nTrack cannot be a negative number.\n");
+				printf("Enter sequence of tracks to seek: ");
+				i = 1;
+				scanf("%d", &track);
+			}
+		} while (track < 0);
+		array_tracks[i]->value = track;
+	}
 
-
+	// just for debugging purposes
+	printf("\nOuputting the track list: ");
+	for (int j = 0; j < seq_size; j++)
+		printf("%d ", array_tracks[j]->value);
+	
+	printf("\n\n");
 	return;
 } // "OPTION #1"
 

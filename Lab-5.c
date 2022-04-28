@@ -21,10 +21,33 @@ int seq_size = 0;
 
 struct arrayType {
 	int value;
-} *array_prototype = NULL, **array_tracks = NULL;
+	bool visited;
+} *array_prototype = NULL, ** array_tracks = NULL, ** sstf_array = NULL;
 typedef struct arrayType type_array;
 
 // global variables and structs above ********************/
+
+
+// helper function
+/*********************************************************/
+// given a dynamic array, count the total distance traversed and return it
+int CountDistance(struct arrayType** count_array) {
+	int temp_distance = 0;
+	int total_distance = 0;
+
+	for (int i = 0; i < seq_size; i++) {
+		if ((i + 1) != seq_size) {
+			temp_distance = abs(count_array[i]->value - count_array[i + 1]->value);
+			total_distance += temp_distance;
+			// debugging purpsoses
+			/*
+			printf("\nTemp Distance between %d and %d is = %d\n",
+				array_tracks[i]->value, array_tracks[i + 1]->value, temp_distance);
+				*/
+		}
+	}
+	return total_distance;
+} // HELPER
 
 
 // option 1
@@ -39,8 +62,8 @@ void EnterParameters() {
 	scanf("%d", &seq_size);
 	// ensure sequence size is a positive number
 	do {
-		if (seq_size < 0) {
-			printf("\nSequence size cannot be a negative number.\n");
+		if (seq_size <= 0) {
+			printf("\nSequence size must be greater than 0.\n");
 			printf("Enter size of sequence: ");
 			scanf("%d", &seq_size);
 		}
@@ -50,6 +73,7 @@ void EnterParameters() {
 	array_tracks = (type_array**)malloc(seq_size * sizeof(array_tracks));
 	for (int i = 0; i < seq_size; i++) {
 		array_tracks[i] = (type_array*)malloc(seq_size * sizeof(array_tracks));
+		array_tracks[i]->visited = false;
 	}
 
 	// prompt for starting track, store in index 0
@@ -57,36 +81,32 @@ void EnterParameters() {
 	scanf("%d", &starting_track);
 	// ensure starting track is a positive number
 	do {
-		if (starting_track < 0) {
-			printf("\nSequence size cannot be a negative number.\n");
+		if (starting_track <= 0) {
+			printf("\nSequence size must be greater than 0.\n");
 			printf("Enter starting track: ");
 			scanf("%d", &starting_track);
 		}
-	} while (starting_track < 0);
+	} while (starting_track <= 0);
 	array_tracks[0]->value = starting_track;
 
 	// prompt for sequence of tracks to seek, store in index 1 to "sequence size-1"
-	printf("Enter sequence of tracks to seek: ");
-	for (int i = 1; i <= (seq_size - 1); i++) {
-		do {
-			scanf("%d", &track);
-			if (track < 0) {
-				printf("\nTrack cannot be a negative number.\n");
-				printf("Enter sequence of tracks to seek: ");
-				i = 1;
+	if (seq_size >= 2) {
+		printf("Enter sequence of tracks to seek: ");
+		for (int i = 1; i <= (seq_size - 1); i++) {
+			do {
 				scanf("%d", &track);
-			}
-		} while (track < 0);
-		array_tracks[i]->value = track;
+				if (track < 0) {
+					printf("\nTrack cannot be a negative number.\n");
+					printf("Enter sequence of tracks to seek: ");
+					i = 1;
+					scanf("%d", &track);
+				}
+			} while (track < 0);
+			array_tracks[i]->value = track;
+		}
 	}
-
-	// just for debugging purposes
-	/*
-	printf("\nOuputting the track list: ");
-	for (int j = 0; j < seq_size; j++)
-		printf("%d ", array_tracks[j]->value);
-	*/
-	
+	if (seq_size == 1)
+		printf("\n");
 	printf("\n");
 	return;
 } // "OPTION #1"
@@ -105,10 +125,10 @@ void Traverse_FIFO() {
 
 	// base case (only 0/1 element exists then we simply return that value)
 	if (seq_size == 1)
-		total_distance = array_tracks[0]->value;
-	if (seq_size == 0)
 		total_distance = 0;
 	else {
+		total_distance = CountDistance(array_tracks);
+		/*
 		for (int i = 0; i < seq_size; i++) {
 			if ((i + 1) != seq_size) {
 				temp_distance = abs(array_tracks[i]->value - array_tracks[i + 1]->value);
@@ -117,9 +137,10 @@ void Traverse_FIFO() {
 				/*
 				printf("\nTemp Distance between %d and %d is = %d\n",
 					array_tracks[i]->value, array_tracks[i + 1]->value, temp_distance);
-					*/
+					
 			}
 		}
+		*/
 	}
 
 	// print sequence of traversal
@@ -135,22 +156,63 @@ void Traverse_FIFO() {
 
 
 // option 3
+/*
+shortest seek time first (SSTF)
+selects the request with the minimum seek time from the current head position
+*/
 /*********************************************************/
 void Traverse_SSTF() {
-	// declare local variables
-	// initialize current track and distance traversed to starting track
-	// begin printing sequence of traversal 
-	// until every track is traversed
-		// initilize shortest distance to INT_MAX
-		// for each track in sequence
-			// if not already traversed
-				//if distance to traverse is shorter than current shortest distance
-					// set current shortest distance and index of the track	w/ shortest distance
-		// set "done" value for track w/shortest distance to 1 (mark as traversed)
-		// increment number of tracks that have been traversed
-		// update total distance traversed
-		//set current track to new position, print position						
-	// print total distance traversed
+	int temp_distance = 0;
+	int total_distance = 0;
+	int shortest_distance = INT_MAX;
+	int shortest_index = 0;
+
+	// base case if only 0/1 value exists from user input
+	if (seq_size == 1)
+		total_distance = 0;
+	else {
+		// initalize a new dynamic array for output the results
+		sstf_array = (type_array**)malloc(seq_size * sizeof(sstf_array));
+		for (int i = 0; i < seq_size; i++) {
+			sstf_array[i] = (type_array*)malloc(seq_size * sizeof(sstf_array));
+		}
+		// set the starting track
+		sstf_array[0]->value = array_tracks[0]->value;
+		array_tracks[0]->visited = true;
+
+		// iterate through entire queue and find the shortest distance to travel to next
+		for (int i = 0; i < seq_size; i++) {
+			// marks the track as visited, so we don't double count the same element in queue
+			if (i != 0) {
+				sstf_array[i]->value = array_tracks[shortest_index]->value;
+				array_tracks[shortest_index]->visited = true;
+				shortest_distance = INT_MAX;
+			}
+			for (int j = 1; j < seq_size; j++) {
+				// only visit the elements that aren't already on the filtered array
+				if (!array_tracks[j]->visited) {
+					temp_distance = abs(sstf_array[i]->value - array_tracks[j]->value);
+					// if we find that the temporary distance is less than the shortest distance, replace it
+					if (shortest_distance > temp_distance) {
+						shortest_distance = temp_distance;
+						shortest_index = j;
+					}
+				}
+			}
+		}
+		// print sequence of traversal
+		printf("\nTraversed sequence: ");
+		for (int j = 0; j < seq_size; j++) {
+			printf("%d ", sstf_array[j]->value);
+		}
+		// print total distance of tracks traversed
+		total_distance = CountDistance(sstf_array);
+		printf("\nThe distance of the traversed tracks is: %d\n\n", total_distance);
+		// reset this in case we call this function once more
+		for (int k = 0; k < seq_size; k++) {
+			array_tracks[k]->visited = false;
+		}
+	}
 	return;
 } // "OPTION #3" 
 
@@ -263,7 +325,7 @@ int main() {
 			Traverse_FIFO();
 			break;
 		case SSTF:
-			//DeallocteBlockMemory();
+			Traverse_SSTF();
 			break;
 		case SCAN:
 			//DefragmentMemory();
@@ -278,5 +340,5 @@ int main() {
 			printf("Invalid selection made, try again.\n\n");
 		}
 	};
-return 1; /* indicates success */
+	return 1; /* indicates success */
 } // main	

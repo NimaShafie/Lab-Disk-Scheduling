@@ -81,22 +81,55 @@ void EnterParameters() {
 	}
 
 	// just for debugging purposes
+	/*
 	printf("\nOuputting the track list: ");
 	for (int j = 0; j < seq_size; j++)
 		printf("%d ", array_tracks[j]->value);
+	*/
 	
-	printf("\n\n");
+	printf("\n");
 	return;
 } // "OPTION #1"
 
 
 // option 2
+/*
+first in first out
+disk will traverse the queue in first come first serve order, the simplest form of disk scheduling
+*/
 /*********************************************************/
 void Traverse_FIFO() {
-	// declare local variables		
-	// calculate total distance of traversed tracks
+	// declare local variables
+	int total_distance = 0;
+	int temp_distance = 0;
+
+	// base case (only 0/1 element exists then we simply return that value)
+	if (seq_size == 1)
+		total_distance = array_tracks[0]->value;
+	if (seq_size == 0)
+		total_distance = 0;
+	else {
+		for (int i = 0; i < seq_size; i++) {
+			if ((i + 1) != seq_size) {
+				temp_distance = abs(array_tracks[i]->value - array_tracks[i + 1]->value);
+				total_distance += temp_distance;
+				// debugging purpsoses
+				/*
+				printf("\nTemp Distance between %d and %d is = %d\n",
+					array_tracks[i]->value, array_tracks[i + 1]->value, temp_distance);
+					*/
+			}
+		}
+	}
+
 	// print sequence of traversal
+	printf("\nTraversed sequence: ");
+	for (int j = 0; j < seq_size; j++) {
+		printf("%d ", array_tracks[j]->value);
+	}
 	// print total distance of tracks traversed
+	printf("\nThe distance of the traversed tracks is: %d\n\n", total_distance);
+
 	return;
 } // "OPTION #2"	
 
@@ -227,7 +260,7 @@ int main() {
 			EnterParameters();
 			break;
 		case FIFO:
-			//AllocteBlockMemory();
+			Traverse_FIFO();
 			break;
 		case SSTF:
 			//DeallocteBlockMemory();

@@ -22,7 +22,7 @@ int seq_size = 0;
 struct arrayType {
 	int value;
 	bool visited;
-} *array_prototype = NULL, ** array_tracks = NULL, ** sstf_array = NULL;
+} *array_prototype = NULL, ** array_tracks = NULL, ** sstf_array = NULL, ** scan_array = NULL;
 typedef struct arrayType type_array;
 
 // global variables and structs above ********************/
@@ -123,7 +123,7 @@ void Traverse_FIFO() {
 	int total_distance = 0;
 	int temp_distance = 0;
 
-	// base case (only 0/1 element exists then we simply return that value)
+	// base case (only 1 element exists then we simply return that value)
 	if (seq_size == 1)
 		total_distance = 0;
 	else {
@@ -167,7 +167,7 @@ void Traverse_SSTF() {
 	int shortest_distance = INT_MAX;
 	int shortest_index = 0;
 
-	// base case if only 0/1 value exists from user input
+	// base case if only 1 value exists from user input
 	if (seq_size == 1)
 		total_distance = 0;
 	else {
@@ -218,8 +218,62 @@ void Traverse_SSTF() {
 
 
 // option 4
+/*
+sometimes called the elevator algorithm
+The disk arm starts at one end of the disk, and moves toward the other end, servicing requests until it gets to the
+other end of the disk, where the head movement is reversed and servicing continues.
+we will implement a decreasing scan here (approach 0, then approach max queue number)
+*/
 /*********************************************************/
 void Traverse_Scan() {
+	// declare local variables
+	int total_distance = 0;
+	int temp_distance = 0;
+	int largest_number = 0;
+	int smallest_number = INT_MAX;
+
+	// base case if only 1 value exists from user input
+	if (seq_size == 1)
+		total_distance = 0;
+	else {
+		// initalize a new dynamic array for output the results
+		scan_array = (type_array**)malloc(seq_size * sizeof(scan_array));
+		for (int i = 0; i < seq_size; i++) {
+			scan_array[i] = (type_array*)malloc(seq_size * sizeof(scan_array));
+		}
+		// set the starting track
+		scan_array[0]->value = array_tracks[0]->value;
+		array_tracks[0]->visited = true;
+
+		// iterate through entire queue and find the shortest distance to travel to next
+		for (int i = 0; i < seq_size; i++) {
+			// marks the track as visited, so we don't double count the same element in queue
+			if (i != 0) {
+				scan_array[i]->value = array_tracks[shortest_index]->value;
+				array_tracks[shortest_index]->visited = true;
+				shortest_distance = INT_MAX;
+			}
+			for (int j = 1; j < seq_size; j++) {
+				// only visit the elements that aren't already on the filtered array
+				if (!array_tracks[j]->visited) {
+					temp_distance = abs(scan_array[i]->value - array_tracks[j]->value);
+					// if we find that the temporary distance is less than the shortest distance, replace it
+					if (shortest_distance > temp_distance) {
+						shortest_distance = temp_distance;
+						shortest_index = j;
+					}
+				}
+			}
+		}
+
+	// print sequence of traversal
+	printf("\nTraversed sequence: ");
+	for (int j = 0; j < seq_size; j++) {
+		printf("%d ", array_tracks[j]->value);
+	}
+	// print total distance of tracks traversed
+	printf("\nThe distance of the traversed tracks is: %d\n\n", total_distance);
+
 	// declare local variables
 	//prompt for initial direction (0=descreasing, 1=increasing)
 	// initialize current track and distance traversed to starting track

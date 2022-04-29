@@ -22,7 +22,7 @@ int seq_size = 0;
 struct arrayType {
 	int value;
 	bool visited;
-} *array_prototype = NULL, ** array_tracks = NULL, ** sstf_array = NULL, ** scan_array = NULL;
+} *array_prototype = NULL, ** array_tracks = NULL, ** sstf_array = NULL, ** scan_array = NULL, ** c_scan_array = NULL;
 typedef struct arrayType type_array;
 
 // global variables and structs above ********************/
@@ -39,11 +39,6 @@ int _CountDistance(struct arrayType** count_array) {
 		if ((i + 1) != seq_size) {
 			temp_distance = abs(count_array[i]->value - count_array[i + 1]->value);
 			total_distance += temp_distance;
-			// debugging purpsoses
-			/*
-			printf("\nTemp Distance between %d and %d is = %d\n",
-				array_tracks[i]->value, array_tracks[i + 1]->value, temp_distance);
-				*/
 		}
 	}
 	return total_distance;
@@ -120,26 +115,93 @@ struct arrayType** _ScanDirection(struct arrayType** scan_array, bool direction)
 			temp_track_index = starting_track_index;
 		}
 	}
+	// delete if it works
+	/*
 	for (int j = 1; j <= starting_track_index; j++) {
 		temp_distance = (scan_array[temp_track_index]->value - scan_array[temp_track_index - 1]->value);
 		temp_track_index--;
 		if (temp_track_index == 0)
 			j++;
 	}
+	*/
 	// swapping the smallest element with the starting track (starting track element still has visited = true)
 	temp_value = scan_array[starting_track_index]->value;
 	scan_array[starting_track_index]->value = scan_array[0]->value;
 	scan_array[0]->value = temp_value;
 	temp_track_index = starting_track_index;
+	// delete if it works
+	/*
 	for (int j = 1; j <= starting_track_index; j++) {
 		temp_distance = (scan_array[temp_track_index]->value - scan_array[temp_track_index + 1]->value);
 		temp_track_index++;
 		if (temp_track_index == seq_size)
 			j++;
 	}
+	*/
 	return scan_array;
 } // HELPER
 
+
+// helper function
+/*********************************************************/
+// given a dynamic array and a 0 (decreasing) or 1 (increasing)
+// count the total distance traversed and return it
+struct arrayType** _C_Scan(struct arrayType** c_scan_array) {
+	int temp_distance = 0;
+	int temp_value = 0;
+	int starting_track_index = 0;
+	int temp_track_index = 0;
+
+	c_scan_array[0]->visited = true;
+	// sort the array for easier access (bubble sort from descending order)
+	for (int i = 0; i < seq_size; i++) {
+		for (int k = 0; k < seq_size; k++) {
+			// only iterate if there is an available element next in line
+			if (k != (seq_size - 1)) {
+				// if the current element is greater than the next one in line, we sort it
+				if (c_scan_array[k]->value < c_scan_array[k + 1]->value) {
+					// this means the starting track moved spots, tracking this for later use
+					if (c_scan_array[k]->visited) {
+						c_scan_array[k + 1]->visited = true;
+						c_scan_array[k]->visited = false;
+					}
+					temp_value = c_scan_array[k]->value;
+					c_scan_array[k]->value = c_scan_array[k + 1]->value;
+					c_scan_array[k + 1]->value = temp_value;
+				}
+			}
+		}
+	}
+	for (int n = 0; n < seq_size; n++) {
+		// this is the first track, we will use this index
+		if (c_scan_array[n]->visited) {
+			starting_track_index = n;
+			temp_track_index = starting_track_index;
+		}
+	}
+
+	// swapping the smallest element with the starting track (starting track element still has visited = true)
+	temp_value = c_scan_array[starting_track_index]->value;
+	c_scan_array[starting_track_index]->value = c_scan_array[0]->value;
+	c_scan_array[0]->value = temp_value;
+	temp_track_index = starting_track_index;
+	// c_scan_array[starting_track_index]->value holds where we will go up until
+	// bubble sort once more in ascending order starting from starting_track_index position until end of array
+	for (int m = starting_track_index; m < seq_size; m++) {
+		for (int k = (m + 1); k < seq_size; k++) {
+			// only iterate if there is an available element next in line
+			if (k != (seq_size - 1)) {
+				// if the current element is greater than the next one in line, we sort it
+				if (c_scan_array[k]->value > c_scan_array[k + 1]->value) {
+					temp_value = c_scan_array[k]->value;
+					c_scan_array[k]->value = c_scan_array[k + 1]->value;
+					c_scan_array[k + 1]->value = temp_value;
+				}
+			}
+		}
+	}
+	return c_scan_array;
+} // HELPER
 
 // option 1
 /*********************************************************/
@@ -235,7 +297,7 @@ void Traverse_FIFO() {
 	}
 
 	// print sequence of traversal
-	printf("\nTraversed sequence: ");
+	printf("Traversed sequence: ");
 	for (int j = 0; j < seq_size; j++) {
 		printf("%d ", array_tracks[j]->value);
 	}
@@ -292,7 +354,7 @@ void Traverse_SSTF() {
 			}
 		}
 		// print sequence of traversal
-		printf("\nTraversed sequence: ");
+		printf("Traversed sequence: ");
 		for (int j = 0; j < seq_size; j++) {
 			printf("%d ", sstf_array[j]->value);
 		}
@@ -319,10 +381,7 @@ we will implement a decreasing scan here (approach 0, then approach max queue nu
 void Traverse_Scan() {
 	// declare local variables
 	int total_distance = 0;
-	int temp_distance = 0;
-	int largest_number = 0;
 	int initial_direction = 0;
-	int smallest_number = INT_MAX;
 
 	// base case if only 1 value exists from user input
 	if (seq_size == 1)
@@ -338,7 +397,7 @@ void Traverse_Scan() {
 		}
 
 		// prompt for initial direction for the scan to start from
-		printf("\nEnter initial direction (0 = decreasing, 1 = increasing): ");
+		printf("Enter initial direction (0 = decreasing, 1 = increasing): ");
 		scanf("%d", &initial_direction);
 		// ensure input is valid (0 or 1)
 		do {
@@ -352,56 +411,14 @@ void Traverse_Scan() {
 		scan_array = _ScanDirection(scan_array, initial_direction);
 		total_distance = _CountDistance(scan_array);
 
-		/*
-		// iterate through entire queue and find the shortest distance to travel to next
-		for (int i = 0; i < seq_size; i++) {
-			// marks the track as visited, so we don't double count the same element in queue
-			if (i != 0) {
-				scan_array[i]->value = array_tracks[shortest_index]->value;
-				array_tracks[shortest_index]->visited = true;
-				shortest_distance = INT_MAX;
-			}
-			for (int j = 1; j < seq_size; j++) {
-				// only visit the elements that aren't already on the filtered array
-				if (!array_tracks[j]->visited) {
-					temp_distance = abs(scan_array[i]->value - array_tracks[j]->value);
-					// if we find that the temporary distance is less than the shortest distance, replace it
-					if (shortest_distance > temp_distance) {
-						shortest_distance = temp_distance;
-						shortest_index = j;
-					}
-				}
-			}
-		}
-		*/
-
 		// print sequence of traversal
-		printf("\nTraversed sequence: ");
+		printf("Traversed sequence: ");
 		for (int j = 0; j < seq_size; j++) {
 			printf("%d ", scan_array[j]->value);
 		}
 		// print total distance of tracks traversed
 		printf("\nThe distance of the traversed tracks is: %d\n\n", total_distance);
 	}
-
-	// declare local variables
-	//prompt for initial direction (0=descreasing, 1=increasing)
-	// initialize current track and distance traversed to starting track
-	// begin printing sequence of traversal 
-	// until every track is traversed
-		// initilize shortest distance to INT_MAX
-		// for each track in sequence
-			// if not already traversed
-				//if distance to traverse is shorter than current shortest distance in the current direction
-					// set current shortest distance and index of the track	w/ shortest distance
-						// set flag that at least one track was traversed
-		// if at least one track was traversed
-				// set "done" value for track w/shortest distance to 1 (mark as traversed)
-			// increment number of traversed tracks
-			// update total distance traversed
-			//set current track to new position, print position
-		// else change direction
-	// print total distance traversed
 	return;
 } // "OPTION #4"
 
@@ -410,29 +427,33 @@ void Traverse_Scan() {
 /*********************************************************/
 void Traverse_C_Scan() {
 	// declare local variables
-	// initialize current track and number traversed to starting track
-	// begin printing sequence of traversal 
-	// until every track is traversed
-		// initilize shortest distance to INT_MAX
-		// for each track in sequence
-			// if not already traversed
-				//if distance to traverse is shorter than current shortest distance and a positive value (only increasing direction)
-					// set current shortest distance and index of the track	w/ shortest distance
-						// set flag that at least one track was traversed
-		// if at least one track was traversed
-				// set "done" value for track w/shortest distance to 1 (mark as traversed)
-			// increment number of tracks that have been traversed
-			// if largest track was reached
-				// update total distance traversed by derementing by distance to track (subtracts distance from 0 to track)
-				// reset "largest track" flag
-			// else
-				// update total distance traversed by distance to track
-			//set current track to new position, print position
-		// else (no track was traversed)
-			// update total distance by current track (adds remaining distance before going back to 0)
-			// reset current track to 0 (loop back around)
-			// set "end reached" flag to 1
-	// print total distance traversed
+	int total_distance = 0;
+	int initial_direction = 0;
+
+	// base case if only 1 value exists from user input
+	if (seq_size == 1)
+		total_distance = 0;
+	else {
+		// initalize a new dynamic array for output the results
+		// make a copy of the array to use
+		c_scan_array = (type_array**)malloc(seq_size * sizeof(c_scan_array));
+		for (int i = 0; i < seq_size; i++) {
+			c_scan_array[i] = (type_array*)malloc(seq_size * sizeof(c_scan_array));
+			c_scan_array[i]->value = array_tracks[i]->value;
+			c_scan_array[i]->visited = false;
+		}
+
+		c_scan_array = _C_Scan(c_scan_array);
+		total_distance = _CountDistance(c_scan_array);
+
+		// print sequence of traversal
+		printf("Traversed sequence: ");
+		for (int j = 0; j < seq_size; j++) {
+			printf("%d ", c_scan_array[j]->value);
+		}
+		// print total distance of tracks traversed
+		printf("\nThe distance of the traversed tracks is: %d\n\n", total_distance);
+	}
 	return;
 } // "OPTION #5
 
@@ -495,7 +516,7 @@ int main() {
 			Traverse_Scan();
 			break;
 		case C_SCAN:
-			//DefragmentMemory();
+			Traverse_C_Scan();
 			break;
 		case QUIT:
 			FreeMemoryQuitProgram();

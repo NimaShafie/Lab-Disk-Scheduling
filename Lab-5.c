@@ -2,7 +2,7 @@
 Lab 5 - Disk Scheduling
 Comp 322/L
 Nima Shafie
-4/29/2022
+4/30/2022
 
 Description:
 •	To compare the performance of disk scheduling algorithms:
@@ -307,25 +307,27 @@ void Traverse_SSTF() {
 		exit(0);
 	}
 	// set the starting track
-	sstf_array[0]->value = array_tracks[0]->value;
-	array_tracks[0]->visited = true;
+	if (seq_size > 0) {
+		sstf_array[0]->value = array_tracks[0]->value;
+		array_tracks[0]->visited = true;
 
-	// iterate through entire queue and find the shortest distance to travel to next
-	for (int i = 0; i < seq_size; i++) {
-		// marks the track as visited, so we don't double count the same element in queue
-		if (i != 0) {
-			sstf_array[i]->value = array_tracks[shortest_index]->value;
-			array_tracks[shortest_index]->visited = true;
-			shortest_distance = INT_MAX;
-		}
-		for (int j = 1; j < seq_size; j++) {
-			// only visit the elements that aren't already on the filtered array
-			if (!array_tracks[j]->visited) {
-				temp_distance = abs(sstf_array[i]->value - array_tracks[j]->value);
-				// if we find that the temporary distance is less than the shortest distance, replace it
-				if (shortest_distance > temp_distance) {
-					shortest_distance = temp_distance;
-					shortest_index = j;
+		// iterate through entire queue and find the shortest distance to travel to next
+		for (int i = 0; i < seq_size; i++) {
+			// marks the track as visited, so we don't double count the same element in queue
+			if (i != 0) {
+				sstf_array[i]->value = array_tracks[shortest_index]->value;
+				array_tracks[shortest_index]->visited = true;
+				shortest_distance = INT_MAX;
+			}
+			for (int j = 1; j < seq_size; j++) {
+				// only visit the elements that aren't already on the filtered array
+				if (!array_tracks[j]->visited) {
+					temp_distance = abs(sstf_array[i]->value - array_tracks[j]->value);
+					// if we find that the temporary distance is less than the shortest distance, replace it
+					if (shortest_distance > temp_distance) {
+						shortest_distance = temp_distance;
+						shortest_index = j;
+					}
 				}
 			}
 		}
@@ -361,32 +363,33 @@ void Traverse_Scan() {
 
 	// initalize a new dynamic array for output the results
 	// make a copy of the array to use
-	scan_array = (type_array**)malloc(seq_size * sizeof(scan_array));
-	for (int i = 0; i < seq_size; i++) {
-		scan_array[i] = (type_array*)malloc(seq_size * sizeof(scan_array));
-		scan_array[i]->value = array_tracks[i]->value;
-		scan_array[i]->visited = false;
-	}
-	if (scan_array == NULL) {
-		printf("\nNot enough memory exists on this system, terminating program.\n\n");
-		exit(0);
-	}
-
-	// prompt for initial direction for the scan to start from
-	printf("Enter initial direction (0 = decreasing, 1 = increasing): ");
-	scanf("%d", &initial_direction);
-	// ensure input is valid (0 or 1)
-	do {
-		if (initial_direction > 1 || initial_direction < 0) {
-			printf("\nInitial direction must be either 0 (decreasing) or 1 (increasing)\n");
-			printf("\nEnter initial direction (0 = decreasing, 1 = increasing): ");
-			scanf("%d", &initial_direction);
+	if (seq_size > 0) {
+		scan_array = (type_array**)malloc(seq_size * sizeof(scan_array));
+		for (int i = 0; i < seq_size; i++) {
+			scan_array[i] = (type_array*)malloc(seq_size * sizeof(scan_array));
+			scan_array[i]->value = array_tracks[i]->value;
+			scan_array[i]->visited = false;
 		}
-	} while (initial_direction > 1 || initial_direction < 0);
+		if (scan_array == NULL) {
+			printf("\nNot enough memory exists on this system, terminating program.\n\n");
+			exit(0);
+		}
 
-	scan_array = _ScanDirection(scan_array, initial_direction);
-	total_distance = _CountDistance(scan_array);
+		// prompt for initial direction for the scan to start from
+		printf("Enter initial direction (0 = decreasing, 1 = increasing): ");
+		scanf("%d", &initial_direction);
+		// ensure input is valid (0 or 1)
+		do {
+			if (initial_direction > 1 || initial_direction < 0) {
+				printf("\nInitial direction must be either 0 (decreasing) or 1 (increasing)\n");
+				printf("\nEnter initial direction (0 = decreasing, 1 = increasing): ");
+				scanf("%d", &initial_direction);
+			}
+		} while (initial_direction > 1 || initial_direction < 0);
 
+		scan_array = _ScanDirection(scan_array, initial_direction);
+		total_distance = _CountDistance(scan_array);
+	}
 	// print sequence of traversal
 	printf("Traversed sequence: ");
 	for (int j = 0; j < seq_size; j++) {
@@ -407,20 +410,20 @@ void Traverse_C_Scan() {
 
 	// initalize a new dynamic array for output the results
 	// make a copy of the array to use
-	c_scan_array = (type_array**)malloc(seq_size * sizeof(c_scan_array));
-	for (int i = 0; i < seq_size; i++) {
-		c_scan_array[i] = (type_array*)malloc(seq_size * sizeof(c_scan_array));
-		c_scan_array[i]->value = array_tracks[i]->value;
-		c_scan_array[i]->visited = false;
+	if (seq_size > 0) {
+		c_scan_array = (type_array**)malloc(seq_size * sizeof(c_scan_array));
+		for (int i = 0; i < seq_size; i++) {
+			c_scan_array[i] = (type_array*)malloc(seq_size * sizeof(c_scan_array));
+			c_scan_array[i]->value = array_tracks[i]->value;
+			c_scan_array[i]->visited = false;
+		}
+		if (c_scan_array == NULL) {
+			printf("\nNot enough memory exists on this system, terminating program.\n\n");
+			exit(0);
+		}
+		c_scan_array = _C_Scan(c_scan_array);
+		total_distance = _CountDistance(c_scan_array);
 	}
-	if (c_scan_array == NULL) {
-		printf("\nNot enough memory exists on this system, terminating program.\n\n");
-		exit(0);
-	}
-
-	c_scan_array = _C_Scan(c_scan_array);
-	total_distance = _CountDistance(c_scan_array);
-
 	// print sequence of traversal
 	printf("Traversed sequence: ");
 	for (int j = 0; j < seq_size; j++) {

@@ -55,3 +55,5 @@ dkms.conf
 *.log
 /x64/Debug/Lab-5.vcxproj.FileListAbsolute.txt
 /x64/Debug
+/.vs
+/Comp322-Lab-5
